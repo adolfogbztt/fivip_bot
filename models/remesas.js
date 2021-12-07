@@ -1,0 +1,32 @@
+module.exports = (sequelize, type) => {
+  return sequelize.define("remesas", {
+    id: {
+      type: type.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    correlativo: type.STRING,
+    cliente_id: type.INTEGER,
+    receptor: type.STRING,
+    tipo_doc: type.STRING,
+    n_doc: type.INTEGER,
+    banco: type.STRING,
+    ban_pa_m: type.STRING,
+    n_cuenta: type.STRING,
+    obs: type.STRING,
+    nombre_moneda: type.STRING,
+    pais: type.STRING,
+    iso_moneda: type.STRING,
+    simbolo_moneda: type.STRING,
+    total_envio: type.INTEGER,
+    tasa: type.INTEGER,
+    total_remesa: type.INTEGER,
+    iso_tasa: type.STRING,
+    simbolo_tasa: type.STRING,
+    vendedor_id: type.INTEGER,
+    estado: type.INTEGER,
+    empresa_id: type.INTEGER,
+    fecha: type.STRING,
+    created_at: type.STRING,
+  });
+};

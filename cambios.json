@@ -1,0 +1,41 @@
+{
+  "peru": {
+    "img": "images/_base_peru_navidad.jpeg",
+    "tasas": {
+      "PEN": "1.01",
+      "USD": "4.33",
+      "COP": "0.0012",
+      "CLP": "0.015"
+    },
+    "contactanos": "+51 999 000 111",
+    "imagen_rename": "tasa_peru.jpg",
+    "enviable":true,
+    "paralelo":4.433
+  },
+
+  "costarica": {
+    "img": "images/_base_costa_rica_navidad.jpeg",
+    "tasas": {
+      "sol_peru": "1.88",
+      "dolar_peru": "4.88",
+      "peso_colombia": "4.88",
+      "peso_chile": "4.88"
+    },
+    "contactanos": "+51 999 000 111",
+    "imagen_rename": "tasa_costa_rica.jpg"
+  },
+
+  "recarga": {
+    "img": "images/_base_peru_navidad.jpeg",
+    "tasas": {
+      "PEN": "0000000.12",
+      "dolar_peru": "0000000.122",
+      "peso_colombia": "00000.1",
+      "peso_chile": "10.00001"
+    },
+    "contactanos": "+51 999 000 111",
+    "imagen_rename": "tasa_recargas.jpg",
+    "recarga":true
+  }
+
+}
