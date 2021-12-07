@@ -348,12 +348,12 @@ const rename = async (user_id, body, from) => {
   return true;
 };
 
-// const sendMedia = (number, fileName) => {
-//   number = number.replace("@c.us", "");
-//   number = `${number}@c.us`;
-//   const media = MessageMedia.fromFilePath(`./mediaSend/${fileName}`);
-//   client.sendMessage(number, media);
-// };
+const sendMedia = (number, fileName) => {
+  number = number.replace("@c.us", "");
+  number = `${number}@c.us`;
+  const media = MessageMedia.fromFilePath(`./mediaSend/${fileName}`);
+  client.sendMessage(number, media);
+};
 
 /**
  * Revisamos si existe archivo con credenciales!
