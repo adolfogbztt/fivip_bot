@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require("fs");
 const dialogflow = require("@google-cloud/dialogflow");
 const { Client, MessageMedia } = require("whatsapp-web.js");
@@ -5,8 +6,9 @@ const qrcode = require("qrcode-terminal");
 const fetch = require("node-fetch");
 const express = require("express");
 const bodyParser = require("body-parser");
+const Jimp = require("jimp");
 
-const { User, History, Cliente, Remesa } = require("./db");
+const { User, History, Cliente, _Cliente, Remesa, _Tasas, Bot, Pagos } = require("./db");
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.use(
 );
 const dialogFlowConfig = require("./assets/newagent.json");
 const user = require("./models/usuarios");
+const { DefaultDeserializer } = require('v8');
 const SESSION_FILE_PATH = "./assets/session.json";
 
 // console.log(dialogFlowConfig)
@@ -85,6 +88,8 @@ const withSession = () => {
 
   client.on("ready", () => {
     console.log("Client is ready!");
+    console.log('EMPRESA ID', process.env.EMPRESA_ID)
+
     connectionReady();
   });
 
@@ -133,18 +138,19 @@ const connectionReady = () => {
 
 const listenMessage = () => {
   client.on("message", async ({ from, to, body }) => {
-    const user_id = await saludar(from);
-    await replyAsk(from, body, user_id);
+    const cliente_id = await saludar(from);
+    await replyAsk(from, body, cliente_id);
   });
 };
 
-const replyAsk = async (from, answer, user_id) => {
+const replyAsk = async (from, answer, cliente_id) => {
   const msg = parse(answer);
   const flow = await dialog("es", msg, "12312371231656765765123");
+  console.log(JSON.stringify(flow, null, 2))
 
   return new Promise((resolve, reject) => {
     if (answer.includes("/nombre")) {
-      let st = rename(user_id, answer, from);
+      let st = rename(cliente_id, answer, from);
       resolve(true);
     }
 
@@ -152,6 +158,39 @@ const replyAsk = async (from, answer, user_id) => {
       menu(from);
       resolve(true);
     }
+
+    /***COMANDOS */
+    if (msg === "1") {
+      comando1(from);
+      resolve(true);
+    }
+    if (msg === "2") {
+      comando2(from);
+      resolve(true);
+    }
+    if (msg === "3") {
+      comando3(from);
+      resolve(true);
+    }
+    if (msg === "4") {
+      comando4(from);
+      resolve(true);
+    }
+    if (msg === "4") {
+      comando4(from);
+      resolve(true);
+    }
+
+    if (msg === "5") {
+      comando5(from);
+      resolve(true);
+    }
+
+    if (msg === "9") {
+      comando9(from);
+      resolve(true);
+    }
+
 
     if (msg === "mrc") {
       console.log({ from });
@@ -179,82 +218,73 @@ const replyAsk = async (from, answer, user_id) => {
       resolve(true);
     }
 
-    if (flow.response === "[send_tasa_recarga]") {
-      const rawdata = fs.readFileSync("cambios.json");
+    // if (flow.response === "[send_tasa_recarga]") {
+    //   const rawdata = fs.readFileSync("cambios.json");
 
-      const cambios = JSON.parse(rawdata);
-      const cam = Object.keys(cambios);
+    //   const cambios = JSON.parse(rawdata);
+    //   const cam = Object.keys(cambios);
 
-      const recarga = cam.filter((v, index) => {
-        return cambios[v].recarga;
-      });
+    //   const recarga = cam.filter((v, index) => {
+    //     return cambios[v].recarga;
+    //   });
 
-      const cambio_actual = cambios[recarga];
+    //   const cambio_actual = cambios[recarga];
 
-      // From file path
-      const photo = `./images/${cambio_actual.imagen_rename}`;
+    //   // From file path
+    //   const photo = `./images/${cambio_actual.imagen_rename}`;
 
-      const media = MessageMedia.fromFilePath(photo);
-      client.sendMessage(from, media);
-      resolve(true);
-    }
+    //   const media = MessageMedia.fromFilePath(photo);
+    //   client.sendMessage(from, media);
+    //   resolve(true);
+    // }
 
-    if (flow.response === "[send_cuenta_bcp]") {
+
+    if (flow.response === "[send_cuentas]") {
       console.log(flow);
       client.sendMessage(from, "🏦 banco bcp 5616516551");
       client.sendMessage(from, "🏦 banco bcp 5616516551");
       resolve(true);
     }
 
-    if (flow.response === "[send_cuenta_banesco]") {
-      client.sendMessage(from, "🏦 banco banesco 5616516551");
-      client.sendMessage(from, "🏦 banco banesco  5616516551");
-      resolve(true);
-    }
-
     if (flow.response === "[send_calculo_cambio]") {
-      const rawdata = fs.readFileSync("cambios.json");
 
       const monto_base =
         flow.parameters.fields["unit-currency"].structValue?.fields.amount
           .numberValue;
+
       const moneda_base =
         flow.parameters.fields["unit-currency"].structValue?.fields.currency
           .stringValue;
-      const a = flow.parameters.fields["currency-name"].stringValue;
 
-      const cambios = JSON.parse(rawdata);
-      const cam = Object.keys(cambios);
 
-      const enviable = cam.filter((v, index) => {
-        return cambios[v].enviable;
-      });
+      let a = flow.parameters.fields["currency-name"].stringValue;
+      a = a ? true : flow.parameters.fields["currency-name"].listValue?.values[0]?.stringValue;
 
-      const cambio_actual = cambios[enviable];
+      console.log({ monto_base, moneda_base, a })
 
-      console.log({ cambio_actual });
-
-      if (cambio_actual.tasas[moneda_base]) {
-        const a = flow.parameters.fields["currency-name"].stringValue;
-        const total = calcularCambios(
-          cambio_actual,
-          moneda_base,
-          a,
-          monto_base
-        );
-        client.sendMessage(from, "son: " + total);
-      } else {
-        console.log({ cambio_actual, moneda_base, a, monto_base });
+      _Tasas.findOne({ where: { empresa_id: process.env.EMPRESA_ID, iso_from: moneda_base, iso_to: a } }).then(cambio => {
+        if (!!cambio) {
+          const total = calcularCambios(
+            cambio.tasa_c,
+            moneda_base,
+            a,
+            monto_base
+          );
+          client.sendMessage(from, "son:  " + total + ' ' + cambio.simbolo_to);
+        } else {
+          client.sendMessage(
+            from,
+            "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
+            moneda_base
+          );
+        }
+      }, err => {
         client.sendMessage(
           from,
           "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
-            moneda_base
+          moneda_base
         );
-      }
-
-      console.log(flow.parameters);
-
-      // console.log({moneda_base,monto_base,a})
+      })
     }
 
     if (flow.response === "[crear_ticket_recarga]") {
@@ -262,9 +292,8 @@ const replyAsk = async (from, answer, user_id) => {
   });
 };
 
-const calcularCambios = (model, from, to, amount) => {
-  const montoFrom = model.tasas[from];
-  return parseFloat(montoFrom) * parseFloat(amount);
+const calcularCambios = (cambio, from, to, amount) => {
+  return (parseFloat(cambio) * parseFloat(amount)).toFixed(3);
 };
 
 const catchMessage = () => {
@@ -299,49 +328,74 @@ const replyInformationDefault = (to, msg) => {
  * esta funcion retorna el id del usuario
  */
 const saludar = async (from) => {
-  let user = await User.findOne({ where: { phone: from } });
-  if (!user) {
-    user = await User.create({ name: "nulled", phone: from });
+  let cliente = await _Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, _whatsapp: from.replace("@c.us", "") } });
+  if (!cliente) {
+    cliente = await Cliente.create({ nombre: "new client", telefono: from.replace("@c.us", ""), empresa_id: process.env.EMPRESA_ID });
     menu(from);
   }
-  return user.id;
+  return cliente.id;
 };
 
-const menu = (from) => {
-  client.sendMessage(from, "FIVIP ⭐⭐⭐⭐⭐");
-  client.sendMessage(from, "Consulta las tasas actuales escribiendo: *tasas*");
-  client.sendMessage(
-    from,
-    "Consulta las tasas de recargas actuales escribiendo: *recargas*"
-  );
-  //   client.sendMessage(
-  //     from,
-  //     "Consulta Nuestas cuentas escribiendo: *todas las cuentas*"
-  //   );
-
-  client.sendMessage(
-    from,
-    `*Consulta Nuestras Cuentas Bancarias*
-🇵🇪 BCP Peru escribiendo: *cuenta bcp*
-🇻🇪 Banesco escribiendo: *cuenta banesco*`
-  );
-
-  //   client.sendMessage(
-  //     from,
-  //     " "
-  //   );
-  //   client.sendMessage(
-  //     from,
-  //     "🇻🇪 Consulta Nuesta cuenta Banesco de Venezuela escribiendo: *cuenta banesco*"
-  //   );
+const menu = async (from) => {
+  const menus = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: '[menu]' } });
+  menus.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
 };
 
-const rename = async (user_id, body, from) => {
+const comando1 = async (from) => {
+  const bot = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: 1 } });
+  bot.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
+}
+const comando2 = async (from) => {
+  const bot = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: 2 } });
+  bot.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
+}
+const comando3 = async (from) => {
+  const bot = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: 3 } });
+  bot.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
+}
+const comando4 = async (from) => {
+  const bot = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: 4 } });
+  bot.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
+}
+const comando5 = async (from) => {
+  const bot = await Bot.findAll({ where: { empresa_id: process.env.EMPRESA_ID, code: 5 } });
+  bot.map((v) => {
+    client.sendMessage(from, v.respuesta);
+  })
+}
+const comando9 = async (from) => {
+  const cliente = await _Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, _whatsapp: from.replace("@c.us", "") } });
+  const remesas = await Remesa.findAll({
+    where: { empresa_id: process.env.EMPRESA_ID, cliente_id: cliente.id }, limit: 10, order: [
+      ['id', 'DESC']]
+  });
+  remesas.map((v) => {
+    const estatus = v.estado === -1 ? "❌ Por Pagar" : v.estado === 0 ? '⏳ Por Verificar' : '✔️ Pagado'
+    const respuesta = `${v.correlativo} ${new Date(v.created_at).toISOString().slice(0, 10)}\n${v.receptor}\n${v.banco}\n${estatus} *${Number(v.total_remesa).toFixed(2)}${v.simbolo_tasa}*`;
+    client.sendMessage(from, respuesta);
+  })
+};
+
+
+const rename = async (cliente_id, body, from) => {
+
   const name = body.replace("/nombre", "").slice(1);
-  await User.update(
-    { name },
+  const [nombres, apellidos] = name.split(' ')
+
+  await Cliente.update(
+    { nombres, apellidos },
     {
-      where: { id: user_id },
+      where: { id: cliente_id },
     }
   );
   client.sendMessage(from, "Nombre cambiado: *" + name + "*");
@@ -358,7 +412,7 @@ const sendMedia = (number, fileName) => {
 /**
  * Revisamos si existe archivo con credenciales!
  */
- fs.existsSync(SESSION_FILE_PATH) ? withSession() : withOutSession();
+fs.existsSync(SESSION_FILE_PATH) ? withSession() : withOutSession();
 
 /**
  * Rutas
@@ -403,16 +457,98 @@ app.get("/", (req, res) => {
   res.send({ status: "conectado" });
 });
 
+
+app.get("/img/:remesa_id", async (req, res) => {
+  console.log(req.params.remesa_id);
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK); // bitmap fonts
+  const remesa = await Remesa.findOne({ where: { id: req.params.remesa_id } });
+  const cliente = await _Cliente.findOne({ where: { id: remesa.cliente_id } });
+  const pagos = await Pagos.findAll({ where: { remesas_id: remesa.id } });
+
+  console.log({ remesa, cliente })
+  const imagen = await Jimp.read('assets/BASE-RECIBO.png');
+  /**SIDE LEFT */
+  imagen.print(font, 15, 120, `Envio a: ${remesa.receptor}`);
+  imagen.print(font, 15, 135, `${remesa.tipo_doc}: ${remesa.n_doc}`);
+  imagen.print(font, 15, 150, `${'Banco'}: ${remesa.banco}`);
+  imagen.print(font, 15, 165, `${'Numero de Cuenta'}: ${remesa.n_cuenta}`);
+
+  imagen.print(font, 15, 195, `Fecha: ${new Date(remesa.fecha).toISOString().slice(0, 10)}`);
+  imagen.print(font, 15, 210, `${'Correlativo'}: ${remesa.correlativo}`);
+  imagen.print(font, 15, 225, `${'Cliente'}: ${cliente.nombres} ${cliente.apellidos}`);
+  imagen.print(font, 15, 240, `${'Teléfono'}: ${cliente.telefono}`);
+  /**END SIDE LEFT */
+
+  /**SIDE RIGHT */
+  imagen.print(font, 290, 20, `Estado: ${remesa.estado === -1 ? "Por Pagar" : remesa.estado === 0 ? 'Por Verificar' : ' Pagado'}`);
+  /**END SIDE LEFT */
+
+
+  /**OBSERVACION */
+  imagen.print(font, 15, 270, `DETALLES`);
+  imagen.print(font, 15, 285, `Metodo de Cobro`);
+  imagen.print(font, 150, 285, `Monto Cobro`);
+  imagen.print(font, 285, 285, `Acción`);
+  imagen.print(font, 420, 285, `Fecha`);
+  /**END OBSERVACION */
+
+  /**LOOP OBSERVACIONES */
+  /**SETTING */
+  let first_line = 305;
+
+  console.log({pagos});
+
+  
+
+
+
+  /**END LOOP OBSERVACIONES */
+
+  /**FOOTER */
+  imagen.print(font, 15, 450, `Tasas: ${Number(remesa.tasa).toFixed(3)}`);
+  imagen.print(font, 150, 450, `Monto: ${Number(remesa.total_envio).toFixed(3)}`);
+  imagen.print(font, 285, 450, `Total: ${Number(remesa.total_remesa).toFixed(3)}`);
+
+  /**END FOOTER */
+
+  const name = `images/${process.env.EMPRESA_ID}/${remesa.correlativo}.jpg`
+  await imagen.writeAsync(name)
+
+
+  const media = MessageMedia.fromFilePath(name);
+  client.sendMessage(cliente._whatsapp + "@c.us", media);
+
+  res.send({ status: "enviado exitosamente" });
+
+  // Jimp.read('assets/BASE-RECIBO.png', (err, recibo) => {
+  //   if (err) throw err;
+  //   recibo
+  //     .quality(100) // set JPEG quality
+  //     .greyscale() // set greyscale
+  //     .write('output.jpg', res.download('output.jpg')); // save
+  // });
+
+  // res.send({ status: "conectado" });
+});
+
 app.get("/remesas-enviar/:remesa_id", async (req, res) => {
-  console.log(req.params.remesa_id)
-  const remesas = await Remesa.findOne({where:{id:req.params.remesa_id}});
-  const cliente = await Cliente.findByPk(remesas?.cliente_id);
+  console.log(req.params.remesa_id);
+  const remesas = await Remesa.findOne({ where: { id: req.params.remesa_id } });
+  const _cliente = await _Cliente.findByPk(remesas?.cliente_id);
   try {
-    console.log(cliente?._whatsapp+'@c.us');
-    await client.sendMessage(cliente?._whatsapp+'@c.us',JSON.stringify(remesas,2,null))
+    console.log(_cliente?._whatsapp + "@c.us");
+    await client.sendMessage(
+      _cliente?._whatsapp + "@c.us",
+      JSON.stringify(remesas, 2, null)
+    );
     res.json(remesas);
   } catch (error) {
-    res.json({ errors: ["error al enviar recibo de remesa",cliente?._whatsapp+'@c.us'] });
+    res.json({
+      errors: [
+        "error al enviar recibo de remesa",
+        _cliente?._whatsapp + "@c.us",
+      ],
+    });
   }
 });
 

@@ -1,5 +1,5 @@
 module.exports = (sequelize, type) => {
-  return sequelize.define("clientes", {
+  return sequelize.define("_clientes", {
     id: {
       type: type.INTEGER,
       primaryKey: true,
@@ -9,6 +9,6 @@ module.exports = (sequelize, type) => {
     apellidos: type.STRING,
     telefono: type.STRING,
     documento: type.STRING,
-    empresa_id: type.INTEGER,
+    _whatsapp: type.STRING,
   });
 };
