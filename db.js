@@ -12,8 +12,8 @@ const MonedasModel = require("./models/monedas");
 const BancosIntModel = require("./models/banco_inters");
 const BancosVenzModel = require("./models/banco_venes");
 
-const sequelize = new Sequelize("remesas", "root", "1234", {
-  host: "localhost",
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
   dialect: "mysql",
   define: {
     timestamps: false,
