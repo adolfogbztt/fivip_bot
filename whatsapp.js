@@ -137,8 +137,13 @@ const connectionReady = () => {
 
 const listenMessage = () => {
   client.on("message", async ({ from, to, body }) => {
-    const cliente_id = await saludar(from);
-    await replyAsk(from, body, cliente_id);
+    if (typeof (body) === 'string' && !!body.length) {
+      console.log({ body })
+      const cliente_id = await saludar(from);
+      await replyAsk(from, body, cliente_id);
+    } else {
+      console.log('is media file')
+    }
   });
 };
 
@@ -493,7 +498,7 @@ app.get("/img/:remesa_id", async (req, res) => {
   const imagen = await Jimp.read('assets/BASE-RECIBO.png');
   /**SIDE LEFT */
   imagen.print(font, 15, 120, `Envio a: ${remesa.receptor}`);
-  imagen.print(font, 15, 135, `${remesa.tipo_doc}: ${remesa.n_doc}`);
+  imagen.print(font, 15, 135, `Documento: ${remesa.n_doc}`);
   imagen.print(font, 15, 150, `${'Banco'}: ${banco.nombre}`);
   imagen.print(font, 15, 165, `${'Numero de Cuenta'}: ${remesa.n_cuenta}`);
 
@@ -508,27 +513,27 @@ app.get("/img/:remesa_id", async (req, res) => {
   /**END SIDE LEFT */
 
 
-  /**OBSERVACION */
-  imagen.print(font, 15, 270, `DETALLES`);
-  imagen.print(font, 15, 285, `Metodo de Cobro`);
-  imagen.print(font, 150, 285, `Monto Cobro`);
-  imagen.print(font, 285, 285, `Acción`);
-  imagen.print(font, 400, 285, `Fecha`);
-  /**END OBSERVACION */
+  // /**OBSERVACION */
+  // imagen.print(font, 15, 270, `DETALLES`);
+  // imagen.print(font, 15, 285, `Metodo de Cobro`);
+  // imagen.print(font, 150, 285, `Monto Cobro`);
+  // imagen.print(font, 285, 285, `Acción`);
+  // imagen.print(font, 400, 285, `Fecha`);
+  // /**END OBSERVACION */
 
-  /**LOOP OBSERVACIONES */
-  /**SETTING */
-  let first_line = 305;
-  let salto = 30;
-  pagos.map((v, index) => {
+  // /**LOOP OBSERVACIONES */
+  // /**SETTING */
+  // let first_line = 305;
+  // let salto = 30;
+  // pagos.map((v, index) => {
 
-    imagen.print(font, 15, first_line, v.metodo_p);
-    imagen.print(font, 150, first_line, v.monto);
-    imagen.print(font, 400, first_line, new Date(v.updated_at).toISOString().slice(0, 10));
+  //   imagen.print(font, 15, first_line, v.metodo_p);
+  //   imagen.print(font, 150, first_line, v.monto);
+  //   imagen.print(font, 400, first_line, new Date(v.updated_at).toISOString().slice(0, 10));
 
-    first_line += salto;
+  //   first_line += salto;
 
-  })
+  // })
 
 
   /**END LOOP OBSERVACIONES */
