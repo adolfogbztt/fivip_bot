@@ -7,8 +7,17 @@ module.exports = (sequelize, type) => {
     },
     nombres: type.STRING,
     apellidos: type.STRING,
+    tipo_documento_id: type.STRING,
+    n_documento: type.STRING,
+    c_pais: type.STRING,
     telefono: type.STRING,
-    documento: type.STRING,
-    empresa_id: type.INTEGER,
+    paise_id: type.STRING,
+    bot_phone: type.INTEGER,
+    empresa_id: type.STRING,
+    created_at: type.STRING,
+    updated_at: type.STRING,
   });
 };
+
+
+

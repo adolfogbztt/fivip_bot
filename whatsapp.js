@@ -7,8 +7,11 @@ const fetch = require("node-fetch");
 const express = require("express");
 const bodyParser = require("body-parser");
 const Jimp = require("jimp");
+const phoneParse = require("./utils/numberphone");
 
-const { User, History, Cliente, _Cliente, Remesa, _Tasas, Bot, Pagos } = require("./db");
+console.log(phoneParse);
+
+const { User, History, Cliente, _Cliente, Remesa, _Tasas, Bot, Pagos, BancoI, BancoV, Monedas } = require("./db");
 
 const app = express();
 
@@ -23,6 +26,8 @@ app.use(
 const dialogFlowConfig = require("./assets/newagent.json");
 const user = require("./models/usuarios");
 const { DefaultDeserializer } = require('v8');
+const numberphone = require('./utils/numberphone');
+const { isArrayBufferView } = require('util/types');
 const SESSION_FILE_PATH = "./assets/session.json";
 
 // console.log(dialogFlowConfig)
@@ -146,7 +151,7 @@ const listenMessage = () => {
 const replyAsk = async (from, answer, cliente_id) => {
   const msg = parse(answer);
   const flow = await dialog("es", msg, "12312371231656765765123");
-  console.log(JSON.stringify(flow, null, 2))
+  // console.log(JSON.stringify(flow, null, 2))
 
   return new Promise((resolve, reject) => {
     if (answer.includes("/nombre")) {
@@ -328,10 +333,11 @@ const replyInformationDefault = (to, msg) => {
  * esta funcion retorna el id del usuario
  */
 const saludar = async (from) => {
-  let cliente = await _Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, _whatsapp: from.replace("@c.us", "") } });
+  let cliente = await Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, bot_phone: from.replace("@c.us", "") } });
   if (!cliente) {
-    cliente = await Cliente.create({ nombre: "new client", telefono: from.replace("@c.us", ""), empresa_id: process.env.EMPRESA_ID });
-    menu(from);
+    // cliente = await Cliente.create({ nombres: "new client", apellidos: from.replace("@c.us", ""), telefono: from.replace("@c.us", ""), empresa_id: process.env.EMPRESA_ID, c_pais: 89, bot_phone: from.replace("@c.us", ""), paise_id: 82 });
+    // menu(from);
+    return false
   }
   return cliente.id;
 };
@@ -374,18 +380,30 @@ const comando5 = async (from) => {
   })
 }
 const comando9 = async (from) => {
-  const cliente = await _Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, _whatsapp: from.replace("@c.us", "") } });
+  const cliente = await Cliente.findOne({ where: { empresa_id: process.env.EMPRESA_ID, bot_phone: from.replace("@c.us", "") } });
   const remesas = await Remesa.findAll({
     where: { empresa_id: process.env.EMPRESA_ID, cliente_id: cliente.id }, limit: 10, order: [
       ['id', 'DESC']]
   });
-  remesas.map((v) => {
+  remesas.map(async (v) => {
+    let banco;
+    if (!!v.banco_vene_id) {
+      banco = await BancoV.findByPk(v.banco_vene_id);
+    } else if (!!v.banco_inter_id) {
+      banco = await BancoI.findByPk(v.banco_inter_id);
+    } else {
+      banco = {
+        nombre: 'Banco indeterminado'
+      }
+    }
+
+    const moneda = await Monedas.findByPk(v.moneda_id_envio);
+
     const estatus = v.estado === -1 ? "❌ Por Pagar" : v.estado === 0 ? '⏳ Por Verificar' : '✔️ Pagado'
-    const respuesta = `${v.correlativo} ${new Date(v.created_at).toISOString().slice(0, 10)}\n${v.receptor}\n${v.banco}\n${estatus} *${Number(v.total_remesa).toFixed(2)}${v.simbolo_tasa}*`;
+    const respuesta = `${v.correlativo} | ${new Date(v.created_at).toISOString().slice(0, 10)}\n${v.receptor}\n${banco.nombre}\n${estatus} *${Number(v.total_remesa).toFixed(2)} ${moneda.simbolo}*`;
     client.sendMessage(from, respuesta);
   })
 };
-
 
 const rename = async (cliente_id, body, from) => {
 
@@ -459,21 +477,33 @@ app.get("/", (req, res) => {
 
 
 app.get("/img/:remesa_id", async (req, res) => {
-  console.log(req.params.remesa_id);
+
   const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK); // bitmap fonts
   const remesa = await Remesa.findOne({ where: { id: req.params.remesa_id } });
-  const cliente = await _Cliente.findOne({ where: { id: remesa.cliente_id } });
-  const pagos = await Pagos.findAll({ where: { remesas_id: remesa.id } });
+  const cliente = await Cliente.findOne({ where: { id: remesa.cliente_id } });
+  const pagos = await Pagos.findAll({ where: { remesa_id: req.params.remesa_id } });
 
-  console.log({ remesa, cliente })
+  let banco;
+  if (!!remesa.banco_vene_id) {
+    banco = await BancoV.findByPk(remesa.banco_vene_id);
+  } else if (!!remesa.banco_inter_id) {
+    banco = await BancoI.findByPk(remesa.banco_inter_id);
+  } else {
+    banco = {
+      nombre: 'Banco indeterminado'
+    }
+  }
+
+
+  // console.log({ remesa, cliente })
   const imagen = await Jimp.read('assets/BASE-RECIBO.png');
   /**SIDE LEFT */
   imagen.print(font, 15, 120, `Envio a: ${remesa.receptor}`);
   imagen.print(font, 15, 135, `${remesa.tipo_doc}: ${remesa.n_doc}`);
-  imagen.print(font, 15, 150, `${'Banco'}: ${remesa.banco}`);
+  imagen.print(font, 15, 150, `${'Banco'}: ${banco.nombre}`);
   imagen.print(font, 15, 165, `${'Numero de Cuenta'}: ${remesa.n_cuenta}`);
 
-  imagen.print(font, 15, 195, `Fecha: ${new Date(remesa.fecha).toISOString().slice(0, 10)}`);
+  imagen.print(font, 15, 195, `Fecha: ${new Date(remesa.updated_at).toISOString().slice(0, 10)}`);
   imagen.print(font, 15, 210, `${'Correlativo'}: ${remesa.correlativo}`);
   imagen.print(font, 15, 225, `${'Cliente'}: ${cliente.nombres} ${cliente.apellidos}`);
   imagen.print(font, 15, 240, `${'Teléfono'}: ${cliente.telefono}`);
@@ -489,17 +519,22 @@ app.get("/img/:remesa_id", async (req, res) => {
   imagen.print(font, 15, 285, `Metodo de Cobro`);
   imagen.print(font, 150, 285, `Monto Cobro`);
   imagen.print(font, 285, 285, `Acción`);
-  imagen.print(font, 420, 285, `Fecha`);
+  imagen.print(font, 400, 285, `Fecha`);
   /**END OBSERVACION */
 
   /**LOOP OBSERVACIONES */
   /**SETTING */
   let first_line = 305;
+  let salto = 30;
+  pagos.map((v, index) => {
 
-  console.log({pagos});
+    imagen.print(font, 15, first_line, v.metodo_p);
+    imagen.print(font, 150, first_line, v.monto);
+    imagen.print(font, 400, first_line, new Date(v.updated_at).toISOString().slice(0, 10));
 
-  
+    first_line += salto;
 
+  })
 
 
   /**END LOOP OBSERVACIONES */
@@ -514,11 +549,18 @@ app.get("/img/:remesa_id", async (req, res) => {
   const name = `images/${process.env.EMPRESA_ID}/${remesa.correlativo}.jpg`
   await imagen.writeAsync(name)
 
+  try {
 
-  const media = MessageMedia.fromFilePath(name);
-  client.sendMessage(cliente._whatsapp + "@c.us", media);
+    const media = MessageMedia.fromFilePath(name);
+    client.sendMessage(cliente.bot_phone + "@c.us", media);
 
-  res.send({ status: "enviado exitosamente" });
+    res.send({ status: "enviado exitosamente" });
+
+
+  } catch (error) {
+    console.log('Error>>>>>>>>>>>>>>>>>>>>>>>>>>', error)
+  }
+
 
   // Jimp.read('assets/BASE-RECIBO.png', (err, recibo) => {
   //   if (err) throw err;
@@ -534,11 +576,11 @@ app.get("/img/:remesa_id", async (req, res) => {
 app.get("/remesas-enviar/:remesa_id", async (req, res) => {
   console.log(req.params.remesa_id);
   const remesas = await Remesa.findOne({ where: { id: req.params.remesa_id } });
-  const _cliente = await _Cliente.findByPk(remesas?.cliente_id);
+  const cliente = await Cliente.findByPk(remesas?.cliente_id);
   try {
-    console.log(_cliente?._whatsapp + "@c.us");
+    console.log(cliente?.bot_phone + "@c.us");
     await client.sendMessage(
-      _cliente?._whatsapp + "@c.us",
+      cliente?.bot_phone + "@c.us",
       JSON.stringify(remesas, 2, null)
     );
     res.json(remesas);
@@ -546,7 +588,7 @@ app.get("/remesas-enviar/:remesa_id", async (req, res) => {
     res.json({
       errors: [
         "error al enviar recibo de remesa",
-        _cliente?._whatsapp + "@c.us",
+        cliente?.bot_phone + "@c.us",
       ],
     });
   }

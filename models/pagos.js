@@ -7,12 +7,13 @@ module.exports = (sequelize, type) => {
         },
         cuenta_vene_id: type.INTEGER,
         cuenta_inter_id: type.INTEGER,
-        monto: type.INTEGER,
+        monto: type.STRING,
         n_ope: type.STRING,
         metodo_p: type.STRING,
-        remesas_id: type.INTEGER,
+        remesa_id: type.INTEGER,
         signo: type.STRING,
         empresa_id: type.INTEGER,
         created_at: type.STRING,
+        updated_at: type.STRING,
     });
 };
