@@ -7,9 +7,6 @@ const fetch = require("node-fetch");
 const express = require("express");
 const bodyParser = require("body-parser");
 const Jimp = require("jimp");
-const phoneParse = require("./utils/numberphone");
-
-console.log(phoneParse);
 
 const { User, History, Cliente, _Cliente, Remesa, _Tasas, Bot, Pagos, BancoI, BancoV, Monedas } = require("./db");
 
@@ -25,9 +22,6 @@ app.use(
 );
 const dialogFlowConfig = require("./assets/newagent.json");
 const user = require("./models/usuarios");
-const { DefaultDeserializer } = require('v8');
-const numberphone = require('./utils/numberphone');
-const { isArrayBufferView } = require('util/types');
 const SESSION_FILE_PATH = "./assets/session.json";
 
 // console.log(dialogFlowConfig)
