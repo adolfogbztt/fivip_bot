@@ -8,7 +8,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const Jimp = require("jimp");
 
-const { User, History, Cliente, _Cliente, Remesa, _Tasas, Bot, Pagos, BancoI, BancoV, Monedas } = require("./db");
+const { User, History, Cliente, Remesa, Tasas, Bot, Pagos, BancoI, BancoV, Monedas } = require("./db");
 
 const app = express();
 
@@ -261,43 +261,67 @@ const replyAsk = async (from, answer, cliente_id) => {
           .stringValue;
 
 
+
+
       let a = flow.parameters.fields["currency-name"].stringValue;
       a = a ? true : flow.parameters.fields["currency-name"].listValue?.values[0]?.stringValue;
 
-      console.log({ monto_base, moneda_base, a })
+      (async () => {
 
-      _Tasas.findOne({ where: { empresa_id: process.env.EMPRESA_ID, iso_from: moneda_base, iso_to: a } }).then(cambio => {
-        if (!!cambio) {
-          const total = calcularCambios(
-            cambio.tasa_c,
-            moneda_base,
-            a,
-            monto_base
-          );
-          client.sendMessage(from, "son:  " + total + ' ' + cambio.simbolo_to);
-        } else {
-          client.sendMessage(
-            from,
-            "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
-            moneda_base
-          );
+        try {
+
+
+          const model_moneda_base = await Monedas.findOne({ where: { empresa_id: process.env.EMPRESA_ID, iso: moneda_base } });
+          const model_a = await Monedas.findOne({ where: { empresa_id: process.env.EMPRESA_ID, iso: a } });
+
+
+          console.log('>>>>>>>>>>>>>>>>>>>>', model_moneda_base.id, model_a.id);
+
+          Tasas.findOne({ where: { empresa_id: process.env.EMPRESA_ID, moneda_tasa_id: model_a.id, moneda_cambio_id: model_moneda_base.id } }).then(tasa => {
+            console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', { tasa });
+
+
+            if (!!tasa) {
+              const total = calcularCambios(
+                tasa.monto,
+                monto_base
+              );
+              client.sendMessage(from, "son:  " + total + ' ' + model_a.simbolo);
+            } else {
+              client.sendMessage(
+                from,
+                "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
+                moneda_base + ' ' + a
+              );
+            }
+          }, err => {
+            client.sendMessage(
+              from,
+              "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
+              moneda_base + ' ' + a
+            );
+          })
+
+        } catch (error) {
+          console.log('moneda no encontrada')
         }
-      }, err => {
-        client.sendMessage(
-          from,
-          "Lo siento pero la moneda de envio no se encuantra disponible o la escribiste mal usa *soles, dolares, pesos colombianos, pesos chilenos* " +
-          moneda_base
-        );
-      })
+
+
+
+      })()
+
+
     }
+
+
 
     if (flow.response === "[crear_ticket_recarga]") {
     }
   });
 };
 
-const calcularCambios = (cambio, from, to, amount) => {
-  return (parseFloat(cambio) * parseFloat(amount)).toFixed(3);
+const calcularCambios = (cambio, amount) => {
+  return (parseFloat(cambio) * parseFloat(amount)).toFixed(2);
 };
 
 const catchMessage = () => {
@@ -397,7 +421,6 @@ const comando9 = async (from) => {
     }
 
     const moneda = await Monedas.findByPk(v.moneda_id_envio);
-
     const estatus = v.estado === -1 ? "❌ Por Pagar" : v.estado === 0 ? '⏳ Por Verificar' : '✔️ Pagado'
     const respuesta = `${v.correlativo} | ${new Date(v.created_at).toISOString().slice(0, 10)}\n${v.receptor}\n${banco.nombre}\n${estatus} *${Number(v.total_remesa).toFixed(2)} ${moneda.simbolo}*`;
     client.sendMessage(from, respuesta);
@@ -568,8 +591,8 @@ app.get("/img/:remesa_id", async (req, res) => {
   //     .greyscale() // set greyscale
   //     .write('output.jpg', res.download('output.jpg')); // save
   // });
-
   // res.send({ status: "conectado" });
+
 });
 
 app.get("/remesas-enviar/:remesa_id", async (req, res) => {
