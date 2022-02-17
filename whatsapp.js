@@ -201,26 +201,29 @@ const replyAsk = async (from, answer, cliente_id) => {
       client.sendMessage(from, "ere loco?");
       resolve(true);
     }
+    /**
+     * DESACTIVAR COMANDO DE TASAS
+     */
 
-    if (flow.response === "[send_tasa]") {
-      const rawdata = fs.readFileSync("cambios.json");
+    // if (flow.response === "[send_tasa]") {
+    //   const rawdata = fs.readFileSync("cambios.json");
 
-      const cambios = JSON.parse(rawdata);
-      const cam = Object.keys(cambios);
+    //   const cambios = JSON.parse(rawdata);
+    //   const cam = Object.keys(cambios);
 
-      const enviable = cam.filter((v, index) => {
-        return cambios[v].enviable;
-      });
+    //   const enviable = cam.filter((v, index) => {
+    //     return cambios[v].enviable;
+    //   });
 
-      const cambio_actual = cambios[enviable];
+    //   const cambio_actual = cambios[enviable];
 
-      // From file path
-      const photo = `./images/${cambio_actual.imagen_rename}`;
+    //   // From file path
+    //   const photo = `./images/${cambio_actual.imagen_rename}`;
 
-      const media = MessageMedia.fromFilePath(photo);
-      client.sendMessage(from, media);
-      resolve(true);
-    }
+    //   const media = MessageMedia.fromFilePath(photo);
+    //   client.sendMessage(from, media);
+    //   resolve(true);
+    // }
 
     // if (flow.response === "[send_tasa_recarga]") {
     //   const rawdata = fs.readFileSync("cambios.json");
@@ -427,20 +430,20 @@ const comando9 = async (from) => {
   })
 };
 
-const rename = async (cliente_id, body, from) => {
+// const rename = async (cliente_id, body, from) => {
 
-  const name = body.replace("/nombre", "").slice(1);
-  const [nombres, apellidos] = name.split(' ')
+//   const name = body.replace("/nombre", "").slice(1);
+//   const [nombres, apellidos] = name.split(' ')
 
-  await Cliente.update(
-    { nombres, apellidos },
-    {
-      where: { id: cliente_id },
-    }
-  );
-  client.sendMessage(from, "Nombre cambiado: *" + name + "*");
-  return true;
-};
+//   await Cliente.update(
+//     { nombres, apellidos },
+//     {
+//       where: { id: cliente_id },
+//     }
+//   );
+//   client.sendMessage(from, "Nombre cambiado: *" + name + "*");
+//   return true;
+// };
 
 const sendMedia = (number, fileName) => {
   number = number.replace("@c.us", "");
