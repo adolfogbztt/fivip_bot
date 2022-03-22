@@ -15,17 +15,15 @@ const cambios_flayer2 = cambios.slice(4, 8);
 
   const arr = cambios["tasas"];
 
-  console.log();
-
   vuelta = 0;
 
   for (let i = 0; i < arr.length; i++) {
     const e = arr[i];
     const image = await Jimp.read(e.imagen);
-let value;
-    if(i%2 === 0){
-      value = cambios_flayer1; 
-    }else{
+    let value;
+    if (i % 2 === 0) {
+      value = cambios_flayer1;
+    } else {
       value = cambios_flayer2;
     }
 
@@ -42,10 +40,7 @@ let value;
     for (let ii = 0; ii < tasas.length; ii++) {
       tasa = e.cambios[tasas[ii]];
 
-      console.log(value[ii],'>>>>>>', tasa.value)
-
-      tasa.value = value[ii] || tasa.value
-      console.log(ii, tasa.value);
+      tasa.value = value[ii] || tasa.value;
       let _var_text = "FONT_SANS_" + tasa.text_size + "_" + tasa.text_color;
       const font = await Jimp.loadFont(Jimp[_var_text]); // bitmap fonts
       image.print(font, tasa.x, tasa.y, tasa.value);
@@ -63,6 +58,4 @@ let value;
     console.log("Se creo correctamente " + e.imagen_rename);
     vuelta++;
   }
-
-  console.log(vuelta);
 })();
