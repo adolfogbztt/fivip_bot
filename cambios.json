@@ -1,41 +1,168 @@
 {
-  "peru": {
-    "img": "images/_base_peru_navidad.jpeg",
-    "tasas": {
-      "PEN": "1.01",
-      "USD": "4.33",
-      "COP": "0.0012",
-      "CLP": "0.015"
+  "tasas": [
+    {
+      "imagen": "images/_base_peru.jpeg",
+      "imagen_rename": "fivip_tasa_peru.jpg",
+      "cambios": {
+        "PEN": {
+          "x": 130,
+          "y": 240,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "1.01"
+        },
+        "USD": {
+          "x": 130,
+          "y": 370,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "4.33"
+        },
+        "COP": {
+          "x": 130,
+          "y": 490,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.0012"
+        },
+        "CLP": {
+          "x": 130,
+          "y": 626,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.015"
+        },
+        "TFL": {
+          "x": 628,
+          "y": 795,
+          "text_color": "WHITE",
+          "text_size": "32",
+          "value": "+51 912 289 762"
+        }
+      }
     },
-    "contactanos": "+51 999 000 111",
-    "imagen_rename": "tasa_peru.jpg",
-    "enviable":true,
-    "paralelo":4.433
-  },
-
-  "costarica": {
-    "img": "images/_base_costa_rica_navidad.jpeg",
-    "tasas": {
-      "sol_peru": "1.88",
-      "dolar_peru": "4.88",
-      "peso_colombia": "4.88",
-      "peso_chile": "4.88"
+    {
+      "imagen": "images/_base_costa_rica.jpeg",
+      "imagen_rename": "fivip_tasa_costa_rica.jpg",
+      "cambios": {
+        "CRC": {
+          "x": 130,
+          "y": 240,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "1.01"
+        },
+        "ARS": {
+          "x": 130,
+          "y": 370,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "4.33"
+        },
+        "BRL": {
+          "x": 130,
+          "y": 490,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.0012"
+        },
+        "USD": {
+          "x": 130,
+          "y": 626,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.015"
+        },
+        "TLF": {
+          "x": 628,
+          "y": 795,
+          "text_color": "WHITE",
+          "text_size": "32",
+          "value": "+51 912 289 762"
+        }
+      }
     },
-    "contactanos": "+51 999 000 111",
-    "imagen_rename": "tasa_costa_rica.jpg"
-  },
-
-  "recarga": {
-    "img": "images/_base_peru_navidad.jpeg",
-    "tasas": {
-      "PEN": "0000000.12",
-      "dolar_peru": "0000000.122",
-      "peso_colombia": "00000.1",
-      "peso_chile": "10.00001"
+    {
+      "imagen": "images/_base_jrex_peru.jpeg",
+      "imagen_rename": "jrex_tasa_peru.jpg",
+      "cambios": {
+        "PEN": {
+          "x": 435,
+          "y": 160,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "1.01"
+        },
+        "USD": {
+          "x": 500,
+          "y": 300,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "4.33"
+        },
+        "COP": {
+          "x": 435,
+          "y": 440,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.0012"
+        },
+        "CLP": {
+          "x": 500,
+          "y": 580,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.015"
+        },
+        "TLF": {
+          "x": 653,
+          "y": 810,
+          "text_color": "WHITE",
+          "text_size": "32",
+          "value": "+51 930 461 970"
+        }
+      }
     },
-    "contactanos": "+51 999 000 111",
-    "imagen_rename": "tasa_recargas.jpg",
-    "recarga":true
-  }
-
+    {
+      "imagen": "images/_base_jrex_costa_rica.jpeg",
+      "imagen_rename": "jrex_tasa_costa_rica.jpg",
+      "cambios": {
+        "PEN": {
+          "x": 435,
+          "y": 160,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "1.01"
+        },
+        "USD": {
+          "x": 500,
+          "y": 300,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "4.33"
+        },
+        "COP": {
+          "x": 435,
+          "y": 440,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.0012"
+        },
+        "CLP": {
+          "x": 500,
+          "y": 580,
+          "text_color": "BLACK",
+          "text_size": "64",
+          "value": "0.015"
+        },
+        "TLF": {
+          "x": 653,
+          "y": 810,
+          "text_color": "WHITE",
+          "text_size": "32",
+          "value": "+51 930 461 970"
+        }
+      }
+    }
+  ]
 }

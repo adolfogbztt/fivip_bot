@@ -1,6 +1,11 @@
 // Import dependencies
 const fs = require("fs");
 const Jimp = require("jimp");
+const cambios = process.argv.slice(2);
+
+const cambios_flayer1 = cambios.slice(0, 4);
+const cambios_flayer2 = cambios.slice(4, 8);
+
 (async function () {
   // Read the image
 
@@ -8,35 +13,56 @@ const Jimp = require("jimp");
 
   const cambios = JSON.parse(rawdata);
 
-  const arr = Object.keys(cambios);
+  const arr = cambios["tasas"];
+
+  console.log();
+
+  vuelta = 0;
 
   for (let i = 0; i < arr.length; i++) {
-    const cambio = cambios[arr[i]];
-    console.log("Ajustando Imagen " + cambio.imagen_rename);
+    const e = arr[i];
+    const image = await Jimp.read(e.imagen);
+let value;
+    if(i%2 === 0){
+      value = cambios_flayer1; 
+    }else{
+      value = cambios_flayer2;
+    }
 
-    const image = await Jimp.read(cambio.img);
-    
     image.resize(900, 900, Jimp.RESIZE_BEZIER, function (err) {
       if (err) throw err;
     });
-    // // Add text
-    const font = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK); // bitmap fonts
-    const font_white = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE); // bitmap fonts
-    const tasas = Object.keys(cambio.tasas);
-    image.print(font, 130, 240, cambio.tasas[tasas[0]]);
-    image.print(font, 130, 370, cambio.tasas[tasas[1]]);
-    image.print(font, 130, 499, cambio.tasas[tasas[2]]);
-    image.print(font, 130, 626, cambio.tasas[tasas[3]]);
-    image.print(font_white, 628, 795, cambio.contactanos);
+
+    //   image.resize(900, 900, Jimp.RESIZE_BEZIER, function (err) {
+    //     if (err) throw err;
+    //   });
+
+    const tasas = Object.keys(e.cambios);
+
+    for (let ii = 0; ii < tasas.length; ii++) {
+      tasa = e.cambios[tasas[ii]];
+
+      console.log(value[ii],'>>>>>>', tasa.value)
+
+      tasa.value = value[ii] || tasa.value
+      console.log(ii, tasa.value);
+      let _var_text = "FONT_SANS_" + tasa.text_size + "_" + tasa.text_color;
+      const font = await Jimp.loadFont(Jimp[_var_text]); // bitmap fonts
+      image.print(font, tasa.x, tasa.y, tasa.value);
+    }
 
     const date = new Date().toISOString().split("T");
     const fecha = date[0];
     const hora = date[1].replaceAll(":", "-");
+
     // Save the image
     image.write(
-      "./images/history/" + fecha + "-" + hora + "-" + cambio.imagen_rename
+      "./images/history/" + fecha + "-" + hora + "-" + e.imagen_rename
     ); // writeAsync
-    image.write("./images/" + cambio.imagen_rename); // writeAsync
-    console.log("Se creo correctamente " + cambio.imagen_rename);
+    image.write("./images/" + e.imagen_rename); // writeAsync
+    console.log("Se creo correctamente " + e.imagen_rename);
+    vuelta++;
   }
+
+  console.log(vuelta);
 })();
